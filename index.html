@@ -47,19 +47,13 @@ button {
     font-size: 15px;
     cursor: pointer;
 }
-.confirm-box {
-    max-width:700px;
-    margin:auto;
-    padding:50px;
-    font-family:Arial;
-    text-align:center;
-}
 </style>
 
 <script>
 function fillData() {
     const p = new URLSearchParams(window.location.search);
 
+    // Display data
     document.getElementById("vehicle").innerText = p.get("vehicle") || "";
     document.getElementById("condition").innerText = p.get("condition") || "";
     document.getElementById("pickup").innerText = p.get("pickup") || "";
@@ -68,45 +62,19 @@ function fillData() {
     document.getElementById("dzip").innerText = p.get("dzip") || "";
     document.getElementById("date").innerText = p.get("date") || "";
     document.getElementById("price").innerText = p.get("price") || "";
+
+    // Send same data to FormSubmit hidden fields
+    document.getElementById("form_vehicle").value = p.get("vehicle") || "";
+    document.getElementById("form_condition").value = p.get("condition") || "";
+    document.getElementById("form_pickup").value = p.get("pickup") || "";
+    document.getElementById("form_pzip").value = p.get("pzip") || "";
+    document.getElementById("form_delivery").value = p.get("delivery") || "";
+    document.getElementById("form_dzip").value = p.get("dzip") || "";
+    document.getElementById("form_date").value = p.get("date") || "";
+    document.getElementById("form_price").value = p.get("price") || "";
 }
+
 window.onload = fillData;
-
-function proceed(e) {
-    e.preventDefault();
-
-    document.body.innerHTML = `
-    <div class="confirm-box">
-        <h1 style="color:#1a1a1a;">Booking Confirmed</h1>
-
-        <p style="font-size:16px;margin-top:20px;">
-            Thank you for choosing <strong>F16 Logistics LLC</strong>.
-        </p>
-
-        <p style="margin-top:10px;">
-            Your vehicle shipment has been successfully scheduled with our
-            licensed and insured carrier network.
-        </p>
-
-        <p style="margin-top:10px;">
-            Our dispatch team is now preparing your shipment documentation
-            and coordinating carrier assignment.
-        </p>
-
-        <p style="margin-top:20px;color:gray;">
-            You will now be securely redirected to complete
-            your payment authorization.
-        </p>
-
-        <p style="margin-top:40px;font-size:13px;color:#888;">
-            Please do not close this window.
-        </p>
-    </div>
-    `;
-
-    setTimeout(function() {
-        window.location.href = "https://f16logistics.github.io/F16-Logistics/";
-    }, 5000);
-}
 </script>
 </head>
 
@@ -180,13 +148,28 @@ F16 Logistics LLC. Our team will coordinate with our trusted, licensed, and insu
 carrier network to ensure a smooth and professional transport experience.
 </p>
 
-<form onsubmit="proceed(event)">
-    <p>
-        <input type="checkbox" required>
-        I confirm the above information is accurate and agree to proceed.
-    </p>
+<form action="https://formsubmit.co/austin@f16logistics.com" method="POST">
 
-    <button type="submit">Confirm Booking</button>
+<input type="hidden" name="_captcha" value="false">
+<input type="hidden" name="_subject" value="New Booking Confirmation - F16 Logistics">
+<input type="hidden" name="_next" value="https://F16Logistics.github.io/authorization-form/">
+
+<input type="hidden" name="Vehicle" id="form_vehicle">
+<input type="hidden" name="Condition" id="form_condition">
+<input type="hidden" name="Pickup Location" id="form_pickup">
+<input type="hidden" name="Pickup ZIP" id="form_pzip">
+<input type="hidden" name="Delivery Location" id="form_delivery">
+<input type="hidden" name="Delivery ZIP" id="form_dzip">
+<input type="hidden" name="Pickup Date" id="form_date">
+<input type="hidden" name="Quoted Price" id="form_price">
+
+<p>
+    <input type="checkbox" required>
+    I confirm the above information is accurate and agree to proceed.
+</p>
+
+<button type="submit">Confirm Booking</button>
+
 </form>
 
 </body>
