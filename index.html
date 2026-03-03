@@ -53,31 +53,33 @@ canvas {
     height: 150px;
     margin-bottom: 10px;
 }
-#signature-preview {
-    margin-top: 10px;
-    max-height: 150px;
-    border: 1px dashed #888;
-}
 </style>
 
 <script>
-// Fill data from URL
 function fillData() {
     const p = new URLSearchParams(window.location.search);
 
-    const fields = ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"];
-    fields.forEach(f => {
-        const el = document.getElementById(f);
-        const formEl = document.getElementById("form_" + f);
-        if(el && formEl){
-            el.innerText = p.get(f) || "";
-            formEl.value = p.get(f) || "";
-        }
-    });
+    document.getElementById("vehicle").innerText = p.get("vehicle") || "";
+    document.getElementById("condition").innerText = p.get("condition") || "";
+    document.getElementById("pickup").innerText = p.get("pickup") || "";
+    document.getElementById("pzip").innerText = p.get("pzip") || "";
+    document.getElementById("delivery").innerText = p.get("delivery") || "";
+    document.getElementById("dzip").innerText = p.get("dzip") || "";
+    document.getElementById("date").innerText = p.get("date") || "";
+    document.getElementById("price").innerText = p.get("price") || "";
+
+    document.getElementById("form_vehicle").value = p.get("vehicle") || "";
+    document.getElementById("form_condition").value = p.get("condition") || "";
+    document.getElementById("form_pickup").value = p.get("pickup") || "";
+    document.getElementById("form_pzip").value = p.get("pzip") || "";
+    document.getElementById("form_delivery").value = p.get("delivery") || "";
+    document.getElementById("form_dzip").value = p.get("dzip") || "";
+    document.getElementById("form_date").value = p.get("date") || "";
+    document.getElementById("form_price").value = p.get("price") || "";
 }
 
-// Signature pad
-let canvas, ctx, drawing = false, signatureDrawn = false;
+// Signature pad variables
+let canvas, ctx, drawing = false;
 let lastX = 0, lastY = 0;
 
 function initSignaturePad() {
@@ -88,92 +90,57 @@ function initSignaturePad() {
     canvas.width = parseInt(style.width);
     canvas.height = parseInt(style.height);
 
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
+    canvas.addEventListener('mousedown', (e) => {
+        drawing = true;
+        const rect = canvas.getBoundingClientRect();
+        lastX = e.clientX - rect.left;
+        lastY = e.clientY - rect.top;
+    });
+
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseout', () => drawing = false);
     canvas.addEventListener('mousemove', draw);
-
-    canvas.addEventListener('touchstart', startDrawingTouch, {passive:false});
-    canvas.addEventListener('touchmove', drawTouch, {passive:false});
-    canvas.addEventListener('touchend', stopDrawing);
 }
 
-function startDrawing(e) {
-    drawing = true;
-    signatureDrawn = true;
-    const rect = canvas.getBoundingClientRect();
-    lastX = e.clientX - rect.left;
-    lastY = e.clientY - rect.top;
-}
-function startDrawingTouch(e){
-    e.preventDefault();
-    const touch = e.touches[0];
-    drawing = true;
-    signatureDrawn = true;
-    const rect = canvas.getBoundingClientRect();
-    lastX = touch.clientX - rect.left;
-    lastY = touch.clientY - rect.top;
-}
-function stopDrawing() { drawing = false; updateSignatureInput(); }
-function draw(e){
-    if(!drawing) return;
+function draw(e) {
+    if (!drawing) return;
+
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#000';
     ctx.beginPath();
-    ctx.moveTo(lastX,lastY);
-    ctx.lineTo(x,y);
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
     ctx.stroke();
-    lastX = x; lastY = y;
-    updateSignatureInput();
-}
-function drawTouch(e){
-    e.preventDefault();
-    if(!drawing) return;
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#000';
-    ctx.beginPath();
-    ctx.moveTo(lastX,lastY);
-    ctx.lineTo(x,y);
-    ctx.stroke();
-    lastX = x; lastY = y;
-    updateSignatureInput();
+
+    lastX = x;
+    lastY = y;
+
+    document.getElementById('signature-input').value = canvas.toDataURL();
 }
 
-function updateSignatureInput(){
-    const sigInput = document.getElementById('signature-input');
-    sigInput.value = canvas.toDataURL();
-    document.getElementById('signature-preview').src = sigInput.value;
-}
-
-function clearSignature(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+function clearSignature() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     document.getElementById('signature-input').value = '';
-    document.getElementById('signature-preview').src = '';
-    signatureDrawn = false;
 }
 
-function validateForm(e){
-    if(!signatureDrawn){
-        alert("Please draw your signature before submitting.");
-        e.preventDefault();
+// ✅ NEW: Require Signature Before Submit
+function validateForm() {
+    const signature = document.getElementById('signature-input').value;
+    if (!signature) {
+        alert("Please provide your signature before confirming.");
         return false;
     }
     return true;
 }
 
-window.onload = function(){
+window.onload = function() {
     fillData();
     initSignaturePad();
-    document.getElementById('contractForm').addEventListener('submit', validateForm);
 };
 </script>
 </head>
@@ -181,7 +148,9 @@ window.onload = function(){
 <body>
 
 <h1>Vehicle Transport Agreement</h1>
-<div class="subtitle">F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination</div>
+<div class="subtitle">
+F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination
+</div>
 
 <div class="section">
 
@@ -242,7 +211,10 @@ F16 Logistics LLC. Our team will coordinate with our trusted, licensed, and insu
 carrier network to ensure a smooth and professional transport experience.
 </p>
 
-<form id="contractForm" action="https://formsubmit.co/austin@f16logistics.com" method="POST">
+<form action="https://formsubmit.co/austin@f16logistics.com" 
+      method="POST" 
+      onsubmit="return validateForm()">
+
 <input type="hidden" name="_captcha" value="false">
 <input type="hidden" name="_subject" value="New Booking Confirmation - F16 Logistics">
 <input type="hidden" name="_next" value="https://f16logistics.github.io/F16-Logistics/">
@@ -261,7 +233,6 @@ carrier network to ensure a smooth and professional transport experience.
     <canvas id="signature-pad"></canvas>
     <button type="button" onclick="clearSignature()">Clear Signature</button>
     <input type="hidden" name="Signature" id="signature-input">
-    <img id="signature-preview" alt="Signature Preview">
 </div>
 
 <p>
@@ -270,6 +241,7 @@ carrier network to ensure a smooth and professional transport experience.
 </p>
 
 <button type="submit">Confirm Booking</button>
+
 </form>
 
 </body>
