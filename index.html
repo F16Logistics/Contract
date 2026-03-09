@@ -52,6 +52,7 @@ canvas {
     width: 100%;
     height: 150px;
     margin-bottom: 10px;
+    touch-action: none;
 }
 </style>
 
@@ -78,11 +79,11 @@ function fillData() {
     document.getElementById("form_price").value = p.get("price") || "";
 }
 
-// Signature pad variables
 let canvas, ctx, drawing = false;
 let lastX = 0, lastY = 0;
 
 function initSignaturePad() {
+
     canvas = document.getElementById('signature-pad');
     ctx = canvas.getContext('2d');
 
@@ -90,55 +91,80 @@ function initSignaturePad() {
     canvas.width = parseInt(style.width);
     canvas.height = parseInt(style.height);
 
-    canvas.addEventListener('mousedown', (e) => {
-        drawing = true;
+    function getPos(e){
         const rect = canvas.getBoundingClientRect();
-        lastX = e.clientX - rect.left;
-        lastY = e.clientY - rect.top;
-    });
 
-    canvas.addEventListener('mouseup', () => drawing = false);
-    canvas.addEventListener('mouseout', () => drawing = false);
-    canvas.addEventListener('mousemove', draw);
+        if(e.touches){
+            return {
+                x: e.touches[0].clientX - rect.left,
+                y: e.touches[0].clientY - rect.top
+            };
+        } else {
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+    }
+
+    function start(e){
+        drawing = true;
+        const pos = getPos(e);
+        lastX = pos.x;
+        lastY = pos.y;
+    }
+
+    function end(){
+        drawing = false;
+    }
+
+    function move(e){
+        if(!drawing) return;
+
+        e.preventDefault();
+
+        const pos = getPos(e);
+
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#000';
+
+        ctx.beginPath();
+        ctx.moveTo(lastX,lastY);
+        ctx.lineTo(pos.x,pos.y);
+        ctx.stroke();
+
+        lastX = pos.x;
+        lastY = pos.y;
+
+        document.getElementById('signature-input').value = canvas.toDataURL();
+    }
+
+    canvas.addEventListener("mousedown",start);
+    canvas.addEventListener("mousemove",move);
+    canvas.addEventListener("mouseup",end);
+    canvas.addEventListener("mouseout",end);
+
+    canvas.addEventListener("touchstart",start);
+    canvas.addEventListener("touchmove",move);
+    canvas.addEventListener("touchend",end);
 }
 
-function draw(e) {
-    if (!drawing) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#000';
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-
-    lastX = x;
-    lastY = y;
-
-    document.getElementById('signature-input').value = canvas.toDataURL();
+function clearSignature(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    document.getElementById('signature-input').value='';
 }
 
-function clearSignature() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    document.getElementById('signature-input').value = '';
-}
-
-// ✅ NEW: Require Signature Before Submit
-function validateForm() {
+function validateForm(){
     const signature = document.getElementById('signature-input').value;
-    if (!signature) {
+    if(!signature){
         alert("Please provide your signature before confirming.");
         return false;
     }
     return true;
 }
 
-window.onload = function() {
+window.onload = function(){
     fillData();
     initSignaturePad();
 };
@@ -155,56 +181,57 @@ F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination
 <div class="section">
 
 <div class="row">
-    <div style="flex:2;">
-        <div class="label">Vehicle</div>
-        <div id="vehicle"></div>
-    </div>
-    <div style="flex:1;">
-        <div class="label">Condition</div>
-        <div id="condition"></div>
-    </div>
+<div style="flex:2;">
+<div class="label">Vehicle</div>
+<div id="vehicle"></div>
+</div>
+<div style="flex:1;">
+<div class="label">Condition</div>
+<div id="condition"></div>
+</div>
 </div>
 
 <hr>
 
 <div class="row">
-    <div style="flex:2;">
-        <div class="label">Pickup Address</div>
-        <div id="pickup"></div>
-    </div>
-    <div style="flex:1;">
-        <div class="label">Pickup ZIP Code</div>
-        <div id="pzip"></div>
-    </div>
+<div style="flex:2;">
+<div class="label">Pickup Address</div>
+<div id="pickup"></div>
+</div>
+<div style="flex:1;">
+<div class="label">Pickup ZIP Code</div>
+<div id="pzip"></div>
+</div>
 </div>
 
 <div class="row">
-    <div style="flex:2;">
-        <div class="label">Dropoff Address</div>
-        <div id="delivery"></div>
-    </div>
-    <div style="flex:1;">
-        <div class="label">Dropoff ZIP Code</div>
-        <div id="dzip"></div>
-    </div>
+<div style="flex:2;">
+<div class="label">Dropoff Address</div>
+<div id="delivery"></div>
+</div>
+<div style="flex:1;">
+<div class="label">Dropoff ZIP Code</div>
+<div id="dzip"></div>
+</div>
 </div>
 
 <hr>
 
 <div class="row">
-    <div style="flex:2;">
-        <div class="label">Estimated Pickup Date</div>
-        <div id="date"></div>
-    </div>
-    <div style="flex:1;">
-        <div class="label">Total Price</div>
-        <div>$<span id="price"></span></div>
-    </div>
+<div style="flex:2;">
+<div class="label">Estimated Pickup Date</div>
+<div id="date"></div>
+</div>
+<div style="flex:1;">
+<div class="label">Total Price</div>
+<div>$<span id="price"></span></div>
+</div>
 </div>
 
 </div>
 
 <h3>Terms & Agreement</h3>
+
 <p>
 By confirming your booking below, you are securing your vehicle shipment with 
 F16 Logistics LLC. Our team will coordinate with our trusted, licensed, and insured 
@@ -212,8 +239,8 @@ carrier network to ensure a smooth and professional transport experience.
 </p>
 
 <form action="https://formsubmit.co/austin@f16logistics.com" 
-      method="POST" 
-      onsubmit="return validateForm()">
+method="POST" 
+onsubmit="return validateForm()">
 
 <input type="hidden" name="_captcha" value="false">
 <input type="hidden" name="_subject" value="New Booking Confirmation - F16 Logistics">
@@ -229,15 +256,15 @@ carrier network to ensure a smooth and professional transport experience.
 <input type="hidden" name="Quoted Price" id="form_price">
 
 <div>
-    <label><strong>Sign Here:</strong></label>
-    <canvas id="signature-pad"></canvas>
-    <button type="button" onclick="clearSignature()">Clear Signature</button>
-    <input type="hidden" name="Signature" id="signature-input">
+<label><strong>Sign Here:</strong></label>
+<canvas id="signature-pad"></canvas>
+<button type="button" onclick="clearSignature()">Clear Signature</button>
+<input type="hidden" name="Signature" id="signature-input">
 </div>
 
 <p>
-    <input type="checkbox" required>
-    I confirm the above information is accurate and agree to proceed.
+<input type="checkbox" required>
+I confirm the above information is accurate and agree to proceed.
 </p>
 
 <button type="submit">Confirm Booking</button>
