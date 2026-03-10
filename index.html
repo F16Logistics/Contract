@@ -19,6 +19,7 @@ canvas { border: 1px solid #ccc; width: 100%; height: 150px; margin-bottom: 10px
 <script>
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxNEKzjqp_XQznN_00YtzERkuZB5LNL4R7mvRREyLNhTOr2jduWw1I5A8TzKiFZvkoU/exec";
 
+// Prefill contract fields from URL
 function fillData() {
     const p = new URLSearchParams(window.location.search);
     ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].forEach(id => {
@@ -28,6 +29,7 @@ function fillData() {
     });
 }
 
+// Signature pad setup
 let canvas, ctx, drawing=false, lastX=0, lastY=0;
 
 function initSignaturePad() {
@@ -63,6 +65,7 @@ function clearSignature(){
     document.getElementById("signature-input").value=""; 
 }
 
+// Handle form submission: send to Google Sheet & FormSubmit
 async function handleSubmit(e){
     e.preventDefault();
     const signature = document.getElementById("signature-input").value;
@@ -74,8 +77,10 @@ async function handleSubmit(e){
     data.signature = signature;
 
     try {
+        // Post to Google Sheet
         await fetch(SHEET_URL, { method:"POST", body: JSON.stringify(data) });
-        document.getElementById("bookingForm").submit(); // sends email via FormSubmit
+        // Submit form to FormSubmit for email and redirect
+        document.getElementById("bookingForm").submit();
     } catch(err){
         alert("Error sending data to sheet. Try again.");
     }
