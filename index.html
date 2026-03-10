@@ -14,7 +14,6 @@ h1 { text-align: center; margin-bottom: 5px; }
 hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
 button { padding: 12px 30px; font-size: 15px; cursor: pointer; margin-top: 10px; }
 canvas { border: 1px solid #ccc; width: 100%; height: 150px; margin-bottom: 10px; touch-action: none; }
-#downloadCSV { background-color: #4CAF50; color: white; border: none; }
 </style>
 
 <script>
@@ -86,32 +85,6 @@ async function handleSubmit(e){
     }
 }
 
-// Download CSV locally from Sheet data
-async function downloadCSV() {
-    try {
-        const res = await fetch(SHEET_URL + "?action=getAll"); // Google Apps Script can return all rows as JSON
-        const rows = await res.json();
-        if(rows.length === 0){ alert("No data to download"); return; }
-
-        // Convert JSON to CSV
-        const headers = Object.keys(rows[0]);
-        const csv = [
-            headers.join(","), 
-            ...rows.map(r => headers.map(h => `"${r[h]}"`).join(","))
-        ].join("\n");
-
-        // Download file
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        const d = new Date();
-        link.download = `F16_Contracts_${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}.csv`;
-        link.click();
-    } catch(err) {
-        alert("Error downloading CSV: " + err);
-    }
-}
-
 window.onload = function(){
     fillData(); 
     initSignaturePad();
@@ -177,9 +150,6 @@ window.onload = function(){
 <p><input type="checkbox" required> I confirm the above information is accurate and agree to proceed.</p>
 <button type="submit">Confirm Booking</button>
 </form>
-
-<!-- Download CSV button -->
-<button id="downloadCSV" onclick="downloadCSV()">Download All Contracts CSV</button>
 
 </body>
 </html>
