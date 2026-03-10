@@ -88,15 +88,16 @@ async function handleSubmit(e){
         // Generate PNG and include in same data
         data.contractImage = await generateContractImage();
 
-        // POST request with proper JSON headers
+        // POST to Google Apps Script with proper header
         await fetch(SHEET_URL, { 
             method:"POST", 
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data) 
         });
 
-        // Submit to FormSubmit for email/redirect
+        // ONLY submit to FormSubmit AFTER fetch succeeds
         document.getElementById("bookingForm").submit();
+
     } catch(err){
         console.error(err);
         alert("Error sending data. Try again.");
