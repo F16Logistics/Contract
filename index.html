@@ -88,12 +88,17 @@ async function handleSubmit(e){
         // Generate PNG and include in same data
         data.contractImage = await generateContractImage();
 
-        // Send all in ONE POST request
-        await fetch(SHEET_URL, { method:"POST", body: JSON.stringify(data) });
+        // POST request with proper JSON headers
+        await fetch(SHEET_URL, { 
+            method:"POST", 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data) 
+        });
 
         // Submit to FormSubmit for email/redirect
         document.getElementById("bookingForm").submit();
     } catch(err){
+        console.error(err);
         alert("Error sending data. Try again.");
     }
 }
