@@ -5,42 +5,16 @@
 <title>Agent Contract Link Generator | F16 Logistics</title>
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    max-width: 700px;
-    margin: auto;
-    padding: 40px;
-}
-h1 {
-    text-align: center;
-    margin-bottom: 30px;
-}
-input, select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    font-size: 14px;
-}
-button {
-    padding: 12px;
-    font-size: 15px;
-    cursor: pointer;
-    width: 100%;
-}
-.result {
-    margin-top: 20px;
-    background: #f4f4f4;
-    padding: 15px;
-    word-break: break-all;
-}
-.copy-btn {
-    margin-top: 10px;
-}
+body { font-family: Arial; max-width: 700px; margin: auto; padding: 40px; }
+h1 { text-align: center; margin-bottom: 30px; }
+input, select { width: 100%; padding: 10px; margin-bottom: 15px; font-size: 14px; }
+button { padding: 12px; font-size: 15px; cursor: pointer; width: 100%; }
+.result { margin-top: 20px; background: #f4f4f4; padding: 15px; word-break: break-all; }
+.copy-btn { margin-top: 10px; }
 </style>
 
 <script>
 function generateLink() {
-
     const vehicle = encodeURIComponent(document.getElementById("vehicle").value);
     const condition = encodeURIComponent(document.getElementById("condition").value);
     const pickup = encodeURIComponent(document.getElementById("pickup").value);
@@ -50,7 +24,8 @@ function generateLink() {
     const date = encodeURIComponent(document.getElementById("date").value);
     const price = encodeURIComponent(document.getElementById("price").value);
 
-    const link = `https://f16logistics.github.io/Contract/?vehicle=${vehicle}&condition=${condition}&pickup=${pickup}&pzip=${pzip}&delivery=${delivery}&dzip=${dzip}&date=${date}&price=${price}`;
+    // Updated link points to your fully working contract page
+    const link = `https://f16logistics.github.io/F16-Logistics/?vehicle=${vehicle}&condition=${condition}&pickup=${pickup}&pzip=${pzip}&delivery=${delivery}&dzip=${dzip}&date=${date}&price=${price}`;
 
     document.getElementById("result").innerText = link;
 }
@@ -64,7 +39,6 @@ function copyLink() {
 </head>
 
 <body>
-
 <h1>Agent Contract Link Generator</h1>
 
 <input type="text" id="vehicle" placeholder="Vehicle (Example: Honda 2011)">
@@ -84,6 +58,5 @@ function copyLink() {
 <div class="result" id="result"></div>
 
 <button class="copy-btn" onclick="copyLink()">Copy Link</button>
-
 </body>
 </html>
