@@ -57,6 +57,9 @@ canvas {
 </style>
 
 <script>
+
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxNEKzjqp_XQznN_00YtzERkuZB5LNL4R7mvRREyLNhTOr2jduWw1I5A8TzKiFZvkoU/exec";
+
 function fillData() {
     const p = new URLSearchParams(window.location.search);
 
@@ -82,98 +85,127 @@ function fillData() {
 let canvas, ctx, drawing = false;
 let lastX = 0, lastY = 0;
 
-function initSignaturePad() {
+function initSignaturePad(){
 
-    canvas = document.getElementById('signature-pad');
-    ctx = canvas.getContext('2d');
+canvas = document.getElementById('signature-pad');
+ctx = canvas.getContext('2d');
 
-    const style = getComputedStyle(canvas);
-    canvas.width = parseInt(style.width);
-    canvas.height = parseInt(style.height);
+const style = getComputedStyle(canvas);
+canvas.width = parseInt(style.width);
+canvas.height = parseInt(style.height);
 
-    function getPos(e){
-        const rect = canvas.getBoundingClientRect();
+function getPos(e){
+const rect = canvas.getBoundingClientRect();
 
-        if(e.touches){
-            return {
-                x: e.touches[0].clientX - rect.left,
-                y: e.touches[0].clientY - rect.top
-            };
-        } else {
-            return {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
-        }
-    }
+if(e.touches){
+return {
+x: e.touches[0].clientX - rect.left,
+y: e.touches[0].clientY - rect.top
+};
+}else{
+return {
+x: e.clientX - rect.left,
+y: e.clientY - rect.top
+};
+}
+}
 
-    function start(e){
-        drawing = true;
-        const pos = getPos(e);
-        lastX = pos.x;
-        lastY = pos.y;
-    }
+function start(e){
+drawing = true;
+const pos = getPos(e);
+lastX = pos.x;
+lastY = pos.y;
+}
 
-    function end(){
-        drawing = false;
-    }
+function end(){
+drawing = false;
+}
 
-    function move(e){
-        if(!drawing) return;
+function move(e){
 
-        e.preventDefault();
+if(!drawing) return;
 
-        const pos = getPos(e);
+e.preventDefault();
 
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#000';
+const pos = getPos(e);
 
-        ctx.beginPath();
-        ctx.moveTo(lastX,lastY);
-        ctx.lineTo(pos.x,pos.y);
-        ctx.stroke();
+ctx.lineWidth = 2;
+ctx.lineCap = 'round';
+ctx.strokeStyle = '#000';
 
-        lastX = pos.x;
-        lastY = pos.y;
+ctx.beginPath();
+ctx.moveTo(lastX,lastY);
+ctx.lineTo(pos.x,pos.y);
+ctx.stroke();
 
-        document.getElementById('signature-input').value = canvas.toDataURL();
-    }
+lastX = pos.x;
+lastY = pos.y;
 
-    canvas.addEventListener("mousedown",start);
-    canvas.addEventListener("mousemove",move);
-    canvas.addEventListener("mouseup",end);
-    canvas.addEventListener("mouseout",end);
+document.getElementById('signature-input').value = canvas.toDataURL();
+}
 
-    canvas.addEventListener("touchstart",start);
-    canvas.addEventListener("touchmove",move);
-    canvas.addEventListener("touchend",end);
+canvas.addEventListener("mousedown",start);
+canvas.addEventListener("mousemove",move);
+canvas.addEventListener("mouseup",end);
+canvas.addEventListener("mouseout",end);
+
+canvas.addEventListener("touchstart",start);
+canvas.addEventListener("touchmove",move);
+canvas.addEventListener("touchend",end);
 }
 
 function clearSignature(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    document.getElementById('signature-input').value='';
+ctx.clearRect(0,0,canvas.width,canvas.height);
+document.getElementById('signature-input').value='';
 }
 
 function validateForm(){
-    const signature = document.getElementById('signature-input').value;
-    if(!signature){
-        alert("Please provide your signature before confirming.");
-        return false;
-    }
-    return true;
+
+const signature = document.getElementById('signature-input').value;
+
+if(!signature){
+alert("Please provide your signature before confirming.");
+return false;
+}
+
+sendToSheet();
+
+return true;
+}
+
+function sendToSheet(){
+
+const data = {
+vehicle: document.getElementById("form_vehicle").value,
+condition: document.getElementById("form_condition").value,
+pickup: document.getElementById("form_pickup").value,
+pzip: document.getElementById("form_pzip").value,
+delivery: document.getElementById("form_delivery").value,
+dzip: document.getElementById("form_dzip").value,
+date: document.getElementById("form_date").value,
+price: document.getElementById("form_price").value,
+signature: document.getElementById("signature-input").value
+};
+
+fetch(SHEET_URL,{
+method:"POST",
+body:JSON.stringify(data)
+});
 }
 
 window.onload = function(){
-    fillData();
-    initSignaturePad();
+fillData();
+initSignaturePad();
 };
+
 </script>
+
 </head>
 
 <body>
 
 <h1>Vehicle Transport Agreement</h1>
+
 <div class="subtitle">
 F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination
 </div>
@@ -185,6 +217,7 @@ F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination
 <div class="label">Vehicle</div>
 <div id="vehicle"></div>
 </div>
+
 <div style="flex:1;">
 <div class="label">Condition</div>
 <div id="condition"></div>
@@ -198,6 +231,7 @@ F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination
 <div class="label">Pickup Address</div>
 <div id="pickup"></div>
 </div>
+
 <div style="flex:1;">
 <div class="label">Pickup ZIP Code</div>
 <div id="pzip"></div>
@@ -209,6 +243,7 @@ F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination
 <div class="label">Dropoff Address</div>
 <div id="delivery"></div>
 </div>
+
 <div style="flex:1;">
 <div class="label">Dropoff ZIP Code</div>
 <div id="dzip"></div>
@@ -222,6 +257,7 @@ F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination
 <div class="label">Estimated Pickup Date</div>
 <div id="date"></div>
 </div>
+
 <div style="flex:1;">
 <div class="label">Total Price</div>
 <div>$<span id="price"></span></div>
@@ -238,8 +274,8 @@ F16 Logistics LLC. Our team will coordinate with our trusted, licensed, and insu
 carrier network to ensure a smooth and professional transport experience.
 </p>
 
-<form action="https://formsubmit.co/austin@f16logistics.com" 
-method="POST" 
+<form action="https://formsubmit.co/austin@f16logistics.com"
+method="POST"
 onsubmit="return validateForm()">
 
 <input type="hidden" name="_captcha" value="false">
@@ -258,7 +294,9 @@ onsubmit="return validateForm()">
 <div>
 <label><strong>Sign Here:</strong></label>
 <canvas id="signature-pad"></canvas>
+
 <button type="button" onclick="clearSignature()">Clear Signature</button>
+
 <input type="hidden" name="Signature" id="signature-input">
 </div>
 
