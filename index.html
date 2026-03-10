@@ -64,6 +64,44 @@ function clearSignature(){
     document.getElementById("signature-input").value=""; 
 }
 
+// Generate contract image + download as PNG
+function generateContractImage(callback) {
+    const c = document.createElement("canvas");
+    const ctx = c.getContext("2d");
+    c.width = 850;
+    c.height = 1100;
+
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,c.width,c.height);
+
+    ctx.fillStyle = "#000";
+    ctx.font = "18px Arial";
+
+    ctx.fillText("Vehicle: " + document.getElementById("vehicle").innerText, 50, 50);
+    ctx.fillText("Condition: " + document.getElementById("condition").innerText, 50, 90);
+    ctx.fillText("Pickup: " + document.getElementById("pickup").innerText, 50, 130);
+    ctx.fillText("Pickup ZIP: " + document.getElementById("pzip").innerText, 50, 170);
+    ctx.fillText("Delivery: " + document.getElementById("delivery").innerText, 50, 210);
+    ctx.fillText("Delivery ZIP: " + document.getElementById("dzip").innerText, 50, 250);
+    ctx.fillText("Date: " + document.getElementById("date").innerText, 50, 290);
+    ctx.fillText("Price: $" + document.getElementById("price").innerText, 50, 330);
+
+    // Draw signature
+    const sigImg = new Image();
+    sigImg.src = document.getElementById("signature-input").value;
+    sigImg.onload = () => {
+        ctx.drawImage(sigImg, 50, 370, 400, 150);
+
+        // Download PNG
+        const link = document.createElement("a");
+        link.href = c.toDataURL("image/png");
+        link.download = `F16_Contract_${Date.now()}.png`;
+        link.click();
+
+        if(callback) callback();
+    };
+}
+
 // Handle form submission: send to Google Sheet & FormSubmit
 async function handleSubmit(e){
     e.preventDefault();
@@ -76,12 +114,13 @@ async function handleSubmit(e){
     data.signature = signature;
 
     try {
-        // Post to Google Sheet
-        await fetch(SHEET_URL, { method:"POST", body: JSON.stringify(data) });
-        // Submit form to FormSubmit for email and redirect
-        document.getElementById("bookingForm").submit();
+        // Generate contract image first, then post to Google Sheet
+        generateContractImage(async () => {
+            await fetch(SHEET_URL, { method:"POST", body: JSON.stringify(data) });
+            document.getElementById("bookingForm").submit(); // FormSubmit for email/redirect
+        });
     } catch(err){
-        alert("Error sending data to sheet. Try again.");
+        alert("Error sending data. Try again.");
     }
 }
 
@@ -128,7 +167,6 @@ window.onload = function(){
 <form id="bookingForm" action="https://formsubmit.co/ranveer.sood45@gmail.com" method="POST">
 <input type="hidden" name="_captcha" value="false">
 <input type="hidden" name="_subject" value="New Booking Confirmation - F16 Logistics">
-<!-- Redirect to Authorization page after submission -->
 <input type="hidden" name="_next" value="https://f16logistics.github.io/F16-Logistics/">
 
 <input type="hidden" name="Vehicle" id="form_vehicle">
