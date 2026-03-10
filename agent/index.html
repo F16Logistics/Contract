@@ -24,8 +24,8 @@ function generateLink() {
     const date = encodeURIComponent(document.getElementById("date").value);
     const price = encodeURIComponent(document.getElementById("price").value);
 
-    // Updated link points to your fully working contract page
-    const link = `https://f16logistics.github.io/F16-Logistics/?vehicle=${vehicle}&condition=${condition}&pickup=${pickup}&pzip=${pzip}&delivery=${delivery}&dzip=${dzip}&date=${date}&price=${price}`;
+    // Updated to point to the correct Contract folder
+    const link = `https://f16logistics.github.io/Contract/?vehicle=${vehicle}&condition=${condition}&pickup=${pickup}&pzip=${pzip}&delivery=${delivery}&dzip=${dzip}&date=${date}&price=${price}`;
 
     document.getElementById("result").innerText = link;
 }
