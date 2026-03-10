@@ -16,13 +16,11 @@ button { padding: 12px 30px; font-size: 15px; cursor: pointer; margin-top: 10px;
 canvas { border: 1px solid #ccc; width: 100%; height: 150px; margin-bottom: 10px; touch-action: none; }
 </style>
 
-<!-- Include html2canvas library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxNEKzjqp_XQznN_00YtzERkuZB5LNL4R7mvRREyLNhTOr2jduWw1I5A8TzKiFZvkoU/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxNEKzjqp_XQznN_00YtzERkuZB5LNL4R7mvRREyLNhTOr2jduWw1I5A8TzKiFZvkoU/exec"; // your Web App URL
 
-// Prefill contract fields from URL
 function fillData() {
     const p = new URLSearchParams(window.location.search);
     ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].forEach(id => {
@@ -32,7 +30,6 @@ function fillData() {
     });
 }
 
-// Signature pad setup
 let canvas, ctx, drawing=false, lastX=0, lastY=0;
 function initSignaturePad() {
     canvas = document.getElementById("signature-pad");
@@ -67,46 +64,30 @@ function clearSignature(){
     document.getElementById("signature-input").value=""; 
 }
 
-// Generate contract image + save to Drive
-async function generateContractImage(callback){
-    const section = document.body; // captures the full page
-    html2canvas(section).then(async canvasImg => {
-        const imgData = canvasImg.toDataURL("image/png");
-
-        try {
-            // POST the image data to Apps Script to save in Drive
-            await fetch("https://script.google.com/macros/s/YOUR_PDF_SCRIPT_ID/exec", {
-                method:"POST",
-                body: JSON.stringify({ image: imgData })
-            });
-        } catch(e){
-            console.error("Error saving contract image to Drive:", e);
-        }
-
-        if(callback) callback();
+async function saveContractToDrive(pngData) {
+    await fetch(SHEET_URL, {
+        method: "POST",
+        body: JSON.stringify({ saveImage: true, image: pngData })
     });
 }
 
-// Handle form submission: send to Google Sheet & FormSubmit
 async function handleSubmit(e){
     e.preventDefault();
     const signature = document.getElementById("signature-input").value;
     if(!signature){ alert("Please provide your signature."); return; }
 
-    const data = ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].reduce((obj,id)=>{
-        obj[id] = document.getElementById("form_"+id).value; return obj;
-    },{});
-    data.signature = signature;
+    html2canvas(document.body).then(async canvasImg => {
+        const imageData = canvasImg.toDataURL("image/png");
+        await saveContractToDrive(imageData);
 
-    try {
-        // Generate contract image first, then post to Google Sheet
-        generateContractImage(async () => {
-            await fetch(SHEET_URL, { method:"POST", body: JSON.stringify(data) });
-            document.getElementById("bookingForm").submit(); // FormSubmit for email/redirect
-        });
-    } catch(err){
-        alert("Error sending data. Try again.");
-    }
+        const data = ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].reduce((obj,id)=>{
+            obj[id] = document.getElementById("form_"+id).value; return obj;
+        },{});
+        data.signature = signature;
+
+        await fetch(SHEET_URL, { method:"POST", body: JSON.stringify(data) });
+        document.getElementById("bookingForm").submit();
+    });
 }
 
 window.onload = function(){
