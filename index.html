@@ -29,11 +29,17 @@ fetch("https://api.ipify.org?format=json")
 // Prefill contract fields from URL
 function fillData() {
     const p = new URLSearchParams(window.location.search);
+
     ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].forEach(id => {
         const val = p.get(id) || "";
         document.getElementById(id).innerText = val;
         document.getElementById("form_"+id).value = val;
     });
+
+    // ✅ ADDED CUSTOMER FIELDS
+    document.getElementById("name").value = p.get("name") || "";
+    document.getElementById("email").value = p.get("email") || "";
+    document.getElementById("phone").value = p.get("phone") || "";
 }
 
 // Signature pad setup
@@ -90,9 +96,11 @@ function generateContractImage(callback) {
     line("F16 Logistics LLC - Vehicle Transport Agreement");
     line("----------------------------------------------");
 
-    line("Customer Name: " + document.getElementById("Name").innerText);
-    line("Email ID: " + document.getElementById("Email ID").innerText);
-    line("Contact Number: " + document.getElementById("Contact Number").innerText);
+    // ✅ FIXED CUSTOMER DATA
+    line("Customer Name: " + document.getElementById("name").value);
+    line("Email ID: " + document.getElementById("email").value);
+    line("Contact Number: " + document.getElementById("phone").value);
+
     line("Vehicle: " + document.getElementById("vehicle").innerText);
     line("Condition: " + document.getElementById("condition").innerText);
     line("Pickup: " + document.getElementById("pickup").innerText);
@@ -132,6 +140,11 @@ async function handleSubmit(e){
         return obj;
     },{});
 
+    // ✅ ADDED CUSTOMER DATA
+    data.name = document.getElementById("name").value;
+    data.email = document.getElementById("email").value;
+    data.phone = document.getElementById("phone").value;
+
     data.signature = signature;
     data.ip = userIP;
     data.timestamp = new Date().toISOString();
@@ -167,6 +180,16 @@ window.onload = function(){
 <div class="subtitle">F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination</div>
 
 <div class="section">
+
+<!-- ✅ ADDED CUSTOMER FIELDS -->
+<div class="row">
+<div style="flex:1;"><div class="label">Customer Name</div><input type="text" id="name" required></div>
+<div style="flex:1;"><div class="label">Email ID</div><input type="email" id="email" required></div>
+<div style="flex:1;"><div class="label">Phone Number</div><input type="text" id="phone" required></div>
+</div>
+
+<hr>
+
 <div class="row">
 <div style="flex:2;"><div class="label">Vehicle</div><div id="vehicle"></div></div>
 <div style="flex:1;"><div class="label">Condition</div><div id="condition"></div></div>
