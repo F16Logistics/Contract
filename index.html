@@ -36,13 +36,12 @@ function fillData() {
         document.getElementById("form_"+id).value = val;
     });
 
-    // ✅ ADDED CUSTOMER FIELDS
     document.getElementById("name").value = p.get("name") || "";
     document.getElementById("email").value = p.get("email") || "";
     document.getElementById("phone").value = p.get("phone") || "";
 }
 
-// Signature pad setup
+// Signature pad
 let canvas, ctx, drawing=false, lastX=0, lastY=0;
 function initSignaturePad() {
     canvas = document.getElementById("signature-pad");
@@ -77,58 +76,125 @@ function clearSignature(){
     document.getElementById("signature-input").value=""; 
 }
 
-// Generate contract image with FULL proof
+// ✅ UPDATED CLEAN DESIGN
 function generateContractImage(callback) {
     const c = document.createElement("canvas");
     const ctx = c.getContext("2d");
-    c.width = 850;
+
+    c.width = 900;
     c.height = 1200;
 
+    ctx.fillStyle = "#f2f2f2";
+    ctx.fillRect(0, 0, c.width, c.height);
+
     ctx.fillStyle = "#fff";
-    ctx.fillRect(0,0,c.width,c.height);
+    ctx.fillRect(50, 50, 800, 1100);
 
     ctx.fillStyle = "#000";
-    ctx.font = "16px Arial";
 
-    let y = 40;
-    function line(text){ ctx.fillText(text, 50, y); y += 30; }
+    ctx.font = "bold 26px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Vehicle Transport Agreement", 450, 100);
 
-    line("F16 Logistics LLC - Vehicle Transport Agreement");
-    line("----------------------------------------------");
+    ctx.font = "14px Arial";
+    ctx.fillText("F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination", 450, 130);
 
-    // ✅ FIXED CUSTOMER DATA
-    line("Customer Name: " + document.getElementById("name").value);
-    line("Email ID: " + document.getElementById("email").value);
-    line("Contact Number: " + document.getElementById("phone").value);
+    ctx.textAlign = "left";
 
-    line("Vehicle: " + document.getElementById("vehicle").innerText);
-    line("Condition: " + document.getElementById("condition").innerText);
-    line("Pickup: " + document.getElementById("pickup").innerText);
-    line("Pickup ZIP: " + document.getElementById("pzip").innerText);
-    line("Delivery: " + document.getElementById("delivery").innerText);
-    line("Delivery ZIP: " + document.getElementById("dzip").innerText);
-    line("Date: " + document.getElementById("date").innerText);
-    line("Price: $" + document.getElementById("price").innerText);
+    let y = 180;
 
-    y += 20;
-    line("Customer authorized payment & agreed to terms.");
-    line("Legally binding under U.S. E-SIGN Act.");
+    function box(label, value, x) {
+        ctx.font = "bold 13px Arial";
+        ctx.fillText(label, x, y);
+        ctx.strokeRect(x, y + 5, 220, 28);
+        ctx.font = "13px Arial";
+        ctx.fillText(value || "-", x + 6, y + 23);
+    }
 
-    y += 20;
-    line("Timestamp: " + new Date().toString());
-    line("IP Address: " + userIP);
-    line("Device: " + navigator.userAgent);
+    box("Customer Name", document.getElementById("name").value, 80);
+    box("Email ID", document.getElementById("email").value, 340);
+    box("Phone Number", document.getElementById("phone").value, 600);
+
+    y += 80;
+
+    ctx.beginPath();
+    ctx.moveTo(80, y);
+    ctx.lineTo(820, y);
+    ctx.stroke();
+
+    y += 40;
+
+    function row(l1, v1, l2, v2) {
+        ctx.font = "bold 13px Arial";
+        ctx.fillText(l1, 80, y);
+        ctx.fillText(l2, 500, y);
+
+        ctx.font = "13px Arial";
+        ctx.fillText(v1 || "-", 80, y + 20);
+        ctx.fillText(v2 || "-", 500, y + 20);
+
+        y += 50;
+    }
+
+    row("Vehicle", document.getElementById("vehicle").innerText,
+        "Condition", document.getElementById("condition").innerText);
+
+    row("Pickup Address", document.getElementById("pickup").innerText,
+        "Pickup ZIP Code", document.getElementById("pzip").innerText);
+
+    row("Dropoff Address", document.getElementById("delivery").innerText,
+        "Dropoff ZIP Code", document.getElementById("dzip").innerText);
+
+    row("Estimated Pickup Date", document.getElementById("date").innerText,
+        "Total Price", "$" + document.getElementById("price").innerText);
+
+    y += 30;
+
+    ctx.font = "bold 16px Arial";
+    ctx.fillText("Terms & Agreement", 80, y);
+
+    y += 25;
+
+    ctx.font = "12px Arial";
+    const terms = [
+        "By confirming your booking, you authorize F16 Logistics LLC to arrange transport services.",
+        "Once assigned, the order may not be eligible for cancellation or refund.",
+        "This electronic signature is legally binding under the U.S. E-SIGN Act.",
+        "IP address and timestamp recorded for verification."
+    ];
+
+    terms.forEach(t => {
+        ctx.fillText(t, 80, y);
+        y += 18;
+    });
+
+    y += 30;
+
+    ctx.font = "bold 14px Arial";
+    ctx.fillText("Customer Signature", 80, y);
+
+    y += 10;
+
+    ctx.strokeRect(80, y, 700, 120);
 
     const sigImg = new Image();
     sigImg.src = document.getElementById("signature-input").value;
 
     sigImg.onload = () => {
-        ctx.drawImage(sigImg, 50, y, 400, 150);
+        ctx.drawImage(sigImg, 90, y + 10, 300, 100);
+
+        y += 150;
+
+        ctx.font = "12px Arial";
+        ctx.fillText("IP: " + userIP, 80, y);
+        y += 18;
+        ctx.fillText("Timestamp: " + new Date().toString(), 80, y);
+
         callback(c.toDataURL("image/png"));
     };
 }
 
-// Submit
+// Submit stays SAME
 async function handleSubmit(e){
     e.preventDefault();
 
@@ -140,7 +206,6 @@ async function handleSubmit(e){
         return obj;
     },{});
 
-    // ✅ ADDED CUSTOMER DATA
     data.name = document.getElementById("name").value;
     data.email = document.getElementById("email").value;
     data.phone = document.getElementById("phone").value;
@@ -181,7 +246,6 @@ window.onload = function(){
 
 <div class="section">
 
-<!-- ✅ ADDED CUSTOMER FIELDS -->
 <div class="row">
 <div style="flex:1;"><div class="label">Customer Name</div><input type="text" id="name" required></div>
 <div style="flex:1;"><div class="label">Email ID</div><input type="email" id="email" required></div>
