@@ -45,12 +45,19 @@ fetch("https://api.ipify.org?format=json")
 .then(res => res.json())
 .then(data => { userIP = data.ip; });
 
+// ✅ UPDATED (AUTO-FILL INCLUDING CUSTOMER DETAILS)
 function fillData() {
     const p = new URLSearchParams(window.location.search);
+
     ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].forEach(id => {
         const val = p.get(id) || "";
         document.getElementById(id).innerText = val;
         document.getElementById("form_"+id).value = val;
+    });
+
+    ["name","email","phone"].forEach(id => {
+        const val = p.get(id) || "";
+        document.getElementById(id).value = val;
     });
 }
 
@@ -97,7 +104,7 @@ function clearSignature(){
     document.getElementById("signature-input").value=""; 
 }
 
-// UPDATED IMAGE DESIGN
+// ✅ IMPROVED CONTRACT IMAGE
 function generateContractImage(callback) {
     const c = document.createElement("canvas");
     const ctx = c.getContext("2d");
@@ -161,7 +168,7 @@ function generateContractImage(callback) {
     y+=40;
 
     ctx.font = "bold 15px Arial";
-    ctx.fillText("Customer Signature:", 50, y);
+    ctx.fillText("Signature of Customer", 50, y);
 
     y+=20;
 
@@ -170,6 +177,11 @@ function generateContractImage(callback) {
 
     sigImg.onload = () => {
         ctx.drawImage(sigImg, 50, y, 350, 120);
+
+        y += 150;
+        ctx.font = "12px Arial";
+        ctx.fillText("Authorized under U.S. E-SIGN Act", 50, y);
+
         callback(c.toDataURL("image/png"));
     };
 }
