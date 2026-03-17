@@ -6,128 +6,148 @@
 
 <style>
 body { font-family: Arial; max-width: 850px; margin: auto; padding: 30px; color: #222; }
-h1 { text-align: center; margin-bottom: 5px; }
-.subtitle { text-align: center; font-size: 14px; color: gray; margin-bottom: 30px; }
+h1 { text-align: center; }
+.subtitle { text-align: center; color: gray; margin-bottom: 30px; }
 .section { background: #f8f8f8; padding: 25px; border-radius: 6px; margin-bottom: 25px; }
 .row { display: flex; gap: 40px; margin-bottom: 15px; }
-.label { font-weight: bold; margin-bottom: 4px; }
-hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
-button { padding: 12px 30px; font-size: 15px; cursor: pointer; margin-top: 10px; }
-canvas { border: 1px solid #ccc; width: 100%; height: 150px; margin-bottom: 10px; touch-action: none; }
+.label { font-weight: bold; }
+canvas { border: 1px solid #ccc; width: 100%; height: 150px; touch-action: none; }
+button { padding: 12px 30px; margin-top: 10px; }
 </style>
 
 <script>
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxNEKzjqp_XQznN_00YtzERkuZB5LNL4R7mvRREyLNhTOr2jduWw1I5A8TzKiFZvkoU/exec";
+const SHEET_URL = "PASTE_YOUR_SCRIPT_URL_HERE";
 
-// Prefill contract fields from URL
-function fillData() {
+let userIP = "Fetching...";
+fetch("https://api.ipify.org?format=json")
+.then(res => res.json())
+.then(data => { userIP = data.ip; });
+
+function fillData(){
     const p = new URLSearchParams(window.location.search);
-    ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].forEach(id => {
-        const val = p.get(id) || "";
+    ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].forEach(id=>{
+        const val = p.get(id)||"";
         document.getElementById(id).innerText = val;
         document.getElementById("form_"+id).value = val;
     });
 }
 
-// Signature pad setup
 let canvas, ctx, drawing=false, lastX=0, lastY=0;
-function initSignaturePad() {
+
+function initSignaturePad(){
     canvas = document.getElementById("signature-pad");
     ctx = canvas.getContext("2d");
-    const style = getComputedStyle(canvas);
-    canvas.width = parseInt(style.width);
-    canvas.height = parseInt(style.height);
 
-    function getPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        if(e.touches) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    function getPos(e){
+        const r = canvas.getBoundingClientRect();
+        return e.touches
+        ? {x:e.touches[0].clientX-r.left, y:e.touches[0].clientY-r.top}
+        : {x:e.clientX-r.left, y:e.clientY-r.top};
     }
-    function start(e){ drawing=true; const pos=getPos(e); lastX=pos.x; lastY=pos.y; }
+
+    function start(e){ drawing=true; let p=getPos(e); lastX=p.x; lastY=p.y; }
     function end(){ drawing=false; }
+
     function move(e){
         if(!drawing) return;
         e.preventDefault();
-        const pos = getPos(e);
-        ctx.lineWidth=2; ctx.lineCap='round'; ctx.strokeStyle="#000";
-        ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(pos.x,pos.y); ctx.stroke();
-        lastX=pos.x; lastY=pos.y;
+        let p = getPos(e);
+
+        ctx.beginPath();
+        ctx.moveTo(lastX,lastY);
+        ctx.lineTo(p.x,p.y);
+        ctx.stroke();
+
+        lastX=p.x; lastY=p.y;
+
         document.getElementById("signature-input").value = canvas.toDataURL();
     }
-    ["mousedown","touchstart"].forEach(evt => canvas.addEventListener(evt,start));
-    ["mouseup","mouseout","touchend"].forEach(evt => canvas.addEventListener(evt,end));
-    ["mousemove","touchmove"].forEach(evt => canvas.addEventListener(evt,move));
+
+    ["mousedown","touchstart"].forEach(e=>canvas.addEventListener(e,start));
+    ["mouseup","mouseout","touchend"].forEach(e=>canvas.addEventListener(e,end));
+    ["mousemove","touchmove"].forEach(e=>canvas.addEventListener(e,move));
 }
 
-function clearSignature(){ 
-    ctx.clearRect(0,0,canvas.width,canvas.height); 
-    document.getElementById("signature-input").value=""; 
+function clearSignature(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    document.getElementById("signature-input").value="";
 }
 
-// Generate contract image + download as PNG
-function generateContractImage(callback) {
-    const c = document.createElement("canvas");
-    const ctx = c.getContext("2d");
-    c.width = 850;
-    c.height = 1100;
+function generateImage(callback){
+    let c = document.createElement("canvas");
+    let ctx = c.getContext("2d");
 
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0,0,c.width,c.height);
+    c.width=850; c.height=1200;
 
-    ctx.fillStyle = "#000";
-    ctx.font = "18px Arial";
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,850,1200);
+    ctx.fillStyle="#000"; ctx.font="16px Arial";
 
-    ctx.fillText("Vehicle: " + document.getElementById("vehicle").innerText, 50, 50);
-    ctx.fillText("Condition: " + document.getElementById("condition").innerText, 50, 90);
-    ctx.fillText("Pickup: " + document.getElementById("pickup").innerText, 50, 130);
-    ctx.fillText("Pickup ZIP: " + document.getElementById("pzip").innerText, 50, 170);
-    ctx.fillText("Delivery: " + document.getElementById("delivery").innerText, 50, 210);
-    ctx.fillText("Delivery ZIP: " + document.getElementById("dzip").innerText, 50, 250);
-    ctx.fillText("Date: " + document.getElementById("date").innerText, 50, 290);
-    ctx.fillText("Price: $" + document.getElementById("price").innerText, 50, 330);
+    let y=40;
+    function t(txt){ ctx.fillText(txt,40,y); y+=30; }
 
-    // Draw signature
-    const sigImg = new Image();
-    sigImg.src = document.getElementById("signature-input").value;
-    sigImg.onload = () => {
-        ctx.drawImage(sigImg, 50, 370, 400, 150);
+    t("F16 Logistics LLC - Contract");
+    t("------------------------------");
+    t("Vehicle: "+vehicle.innerText);
+    t("Condition: "+condition.innerText);
+    t("Pickup: "+pickup.innerText);
+    t("Delivery: "+delivery.innerText);
+    t("Price: $"+price.innerText);
 
-        // Download PNG
-        const link = document.createElement("a");
-        link.href = c.toDataURL("image/png");
-        link.download = `F16_Contract_${Date.now()}.png`;
-        link.click();
+    y+=20;
+    t("Legally Binding Agreement (E-SIGN Act)");
+    t("Customer authorized payment.");
 
-        if(callback) callback();
+    y+=20;
+    t("Timestamp: "+new Date());
+    t("IP: "+userIP);
+    t("Device: "+navigator.userAgent);
+
+    let img = new Image();
+    img.src = document.getElementById("signature-input").value;
+
+    img.onload = ()=>{
+        ctx.drawImage(img,40,y,300,120);
+        callback(c.toDataURL());
     };
 }
 
-// Handle form submission: send to Google Sheet & FormSubmit
-async function handleSubmit(e){
+async function submitForm(e){
     e.preventDefault();
-    const signature = document.getElementById("signature-input").value;
-    if(!signature){ alert("Please provide your signature."); return; }
 
-    const data = ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].reduce((obj,id)=>{
-        obj[id] = document.getElementById("form_"+id).value; return obj;
-    },{});
-    data.signature = signature;
+    let sig = document.getElementById("signature-input").value;
+    if(!sig){ alert("Sign first"); return; }
 
-    try {
-        // Generate contract image first, then post to Google Sheet
-        generateContractImage(async () => {
-            await fetch(SHEET_URL, { method:"POST", body: JSON.stringify(data) });
-            document.getElementById("bookingForm").submit(); // FormSubmit for email/redirect
+    let data = {
+        vehicle: form_vehicle.value,
+        condition: form_condition.value,
+        pickup: form_pickup.value,
+        delivery: form_delivery.value,
+        price: form_price.value,
+        signature: sig,
+        ip: userIP,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent
+    };
+
+    generateImage(async (img)=>{
+        data.contractImage = img;
+
+        await fetch(SHEET_URL,{
+            method:"POST",
+            body: JSON.stringify(data)
         });
-    } catch(err){
-        alert("Error sending data. Try again.");
-    }
+
+        document.getElementById("bookingForm").submit();
+    });
 }
 
-window.onload = function(){
-    fillData(); 
+window.onload = ()=>{
+    fillData();
     initSignaturePad();
-    document.getElementById("bookingForm").addEventListener("submit", handleSubmit);
+    bookingForm.addEventListener("submit", submitForm);
 };
 </script>
 </head>
@@ -135,57 +155,48 @@ window.onload = function(){
 <body>
 
 <h1>Vehicle Transport Agreement</h1>
-<div class="subtitle">F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination</div>
+<div class="subtitle">F16 Logistics LLC</div>
 
 <div class="section">
 <div class="row">
-<div style="flex:2;"><div class="label">Vehicle</div><div id="vehicle"></div></div>
-<div style="flex:1;"><div class="label">Condition</div><div id="condition"></div></div>
-</div>
-
-<hr>
-<div class="row">
-<div style="flex:2;"><div class="label">Pickup Address</div><div id="pickup"></div></div>
-<div style="flex:1;"><div class="label">Pickup ZIP Code</div><div id="pzip"></div></div>
+<div><div class="label">Vehicle</div><div id="vehicle"></div></div>
+<div><div class="label">Condition</div><div id="condition"></div></div>
 </div>
 
 <div class="row">
-<div style="flex:2;"><div class="label">Dropoff Address</div><div id="delivery"></div></div>
-<div style="flex:1;"><div class="label">Dropoff ZIP Code</div><div id="dzip"></div></div>
+<div><div class="label">Pickup</div><div id="pickup"></div></div>
+<div><div class="label">Delivery</div><div id="delivery"></div></div>
 </div>
 
-<hr>
 <div class="row">
-<div style="flex:2;"><div class="label">Estimated Pickup Date</div><div id="date"></div></div>
-<div style="flex:1;"><div class="label">Total Price</div><div>$<span id="price"></span></div></div>
+<div><div class="label">Price</div><div>$<span id="price"></span></div></div>
 </div>
 </div>
 
-<h3>Terms & Agreement</h3>
-<p>By confirming your booking below, you are securing your vehicle shipment with F16 Logistics LLC. Our team will coordinate with our trusted, licensed, and insured carrier network to ensure a smooth and professional transport experience.</p>
+<h3>Terms</h3>
+<p>
+By confirming, you authorize F16 Logistics LLC to charge for services.
+Once dispatched, order is non-refundable.
+This signature is legally binding under E-SIGN Act.
+IP & timestamp are recorded.
+</p>
 
-<form id="bookingForm" action="https://formsubmit.co/alanjohnson97@gmail.com" method="POST">
+<form id="bookingForm" action="https://formsubmit.co/YOUR_EMAIL" method="POST">
 <input type="hidden" name="_captcha" value="false">
-<input type="hidden" name="_subject" value="New Booking Confirmation - F16 Logistics">
-<input type="hidden" name="_next" value="https://f16logistics.github.io/F16-Logistics/">
 
-<input type="hidden" name="Vehicle" id="form_vehicle">
-<input type="hidden" name="Condition" id="form_condition">
-<input type="hidden" name="Pickup Location" id="form_pickup">
-<input type="hidden" name="Pickup ZIP" id="form_pzip">
-<input type="hidden" name="Delivery Location" id="form_delivery">
-<input type="hidden" name="Delivery ZIP" id="form_dzip">
-<input type="hidden" name="Pickup Date" id="form_date">
-<input type="hidden" name="Quoted Price" id="form_price">
+<input type="hidden" id="form_vehicle">
+<input type="hidden" id="form_condition">
+<input type="hidden" id="form_pickup">
+<input type="hidden" id="form_delivery">
+<input type="hidden" id="form_price">
 
-<div>
-<label><strong>Sign Here:</strong></label>
 <canvas id="signature-pad"></canvas>
-<button type="button" onclick="clearSignature()">Clear Signature</button>
-<input type="hidden" name="Signature" id="signature-input">
-</div>
+<button type="button" onclick="clearSignature()">Clear</button>
+<input type="hidden" id="signature-input">
 
-<p><input type="checkbox" required> I confirm the above information is accurate and agree to proceed.</p>
+<br><br>
+<input type="checkbox" required> I agree<br>
+
 <button type="submit">Confirm Booking</button>
 </form>
 
