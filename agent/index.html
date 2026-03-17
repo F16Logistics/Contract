@@ -15,6 +15,7 @@ button { padding: 12px; font-size: 15px; cursor: pointer; width: 100%; }
 
 <script>
 function generateLink() {
+
     const vehicle = encodeURIComponent(document.getElementById("vehicle").value);
     const condition = encodeURIComponent(document.getElementById("condition").value);
     const pickup = encodeURIComponent(document.getElementById("pickup").value);
@@ -24,8 +25,12 @@ function generateLink() {
     const date = encodeURIComponent(document.getElementById("date").value);
     const price = encodeURIComponent(document.getElementById("price").value);
 
-    // Updated to point to the correct Contract folder
-    const link = `https://f16logistics.github.io/Contract/?vehicle=${vehicle}&condition=${condition}&pickup=${pickup}&pzip=${pzip}&delivery=${delivery}&dzip=${dzip}&date=${date}&price=${price}`;
+    // NEW FIELDS
+    const name = encodeURIComponent(document.getElementById("name").value);
+    const email = encodeURIComponent(document.getElementById("email").value);
+    const phone = encodeURIComponent(document.getElementById("phone").value);
+
+    const link = `https://f16logistics.github.io/Contract/?vehicle=${vehicle}&condition=${condition}&pickup=${pickup}&pzip=${pzip}&delivery=${delivery}&dzip=${dzip}&date=${date}&price=${price}&name=${name}&email=${email}&phone=${phone}`;
 
     document.getElementById("result").innerText = link;
 }
@@ -41,6 +46,12 @@ function copyLink() {
 <body>
 <h1>Agent Contract Link Generator</h1>
 
+<!-- NEW CUSTOMER DETAILS -->
+<input type="text" id="name" placeholder="Customer Name">
+<input type="email" id="email" placeholder="Customer Email">
+<input type="text" id="phone" placeholder="Customer Phone">
+
+<!-- EXISTING FIELDS -->
 <input type="text" id="vehicle" placeholder="Vehicle (Example: Honda 2011)">
 <select id="condition">
     <option value="Operable">Operable</option>
@@ -58,5 +69,6 @@ function copyLink() {
 <div class="result" id="result"></div>
 
 <button class="copy-btn" onclick="copyLink()">Copy Link</button>
+
 </body>
 </html>
