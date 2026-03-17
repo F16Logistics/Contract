@@ -6,13 +6,33 @@
 
 <style>
 body { font-family: Arial; max-width: 850px; margin: auto; padding: 30px; color: #222; }
+
 h1 { text-align: center; margin-bottom: 5px; }
 .subtitle { text-align: center; font-size: 14px; color: gray; margin-bottom: 30px; }
-.section { background: #f8f8f8; padding: 25px; border-radius: 6px; margin-bottom: 25px; }
+
+.section { 
+    background: #f8f8f8; 
+    padding: 25px; 
+    border-radius: 6px; 
+    margin-bottom: 25px; 
+    border: 1px solid #ddd;
+}
+
 .row { display: flex; gap: 40px; margin-bottom: 15px; }
+
+.box {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 4px;
+    background: #fff;
+}
+
 .label { font-weight: bold; margin-bottom: 4px; }
+
 hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
+
 button { padding: 12px 30px; font-size: 15px; cursor: pointer; margin-top: 10px; }
+
 canvas { border: 1px solid #ccc; width: 100%; height: 150px; margin-bottom: 10px; touch-action: none; }
 </style>
 
@@ -21,12 +41,10 @@ const SHEET_URL = "https://script.google.com/macros/s/AKfycbx330p8CdDJXOlePhhQ5L
 
 let userIP = "Fetching...";
 
-// Get IP
 fetch("https://api.ipify.org?format=json")
 .then(res => res.json())
 .then(data => { userIP = data.ip; });
 
-// Prefill contract fields from URL
 function fillData() {
     const p = new URLSearchParams(window.location.search);
     ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].forEach(id => {
@@ -36,7 +54,6 @@ function fillData() {
     });
 }
 
-// Signature pad setup
 let canvas, ctx, drawing=false, lastX=0, lastY=0;
 function initSignaturePad() {
     canvas = document.getElementById("signature-pad");
@@ -50,17 +67,26 @@ function initSignaturePad() {
         if(e.touches) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
         return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
+
     function start(e){ drawing=true; const pos=getPos(e); lastX=pos.x; lastY=pos.y; }
     function end(){ drawing=false; }
+
     function move(e){
         if(!drawing) return;
         e.preventDefault();
         const pos = getPos(e);
-        ctx.lineWidth=2; ctx.lineCap='round'; ctx.strokeStyle="#000";
-        ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(pos.x,pos.y); ctx.stroke();
-        lastX=pos.x; lastY=pos.y;
+        ctx.lineWidth=2;
+        ctx.lineCap='round';
+        ctx.strokeStyle="#000";
+        ctx.beginPath();
+        ctx.moveTo(lastX,lastY);
+        ctx.lineTo(pos.x,pos.y);
+        ctx.stroke();
+        lastX=pos.x;
+        lastY=pos.y;
         document.getElementById("signature-input").value = canvas.toDataURL();
     }
+
     ["mousedown","touchstart"].forEach(evt => canvas.addEventListener(evt,start));
     ["mouseup","mouseout","touchend"].forEach(evt => canvas.addEventListener(evt,end));
     ["mousemove","touchmove"].forEach(evt => canvas.addEventListener(evt,move));
@@ -71,7 +97,7 @@ function clearSignature(){
     document.getElementById("signature-input").value=""; 
 }
 
-// Generate contract image with FULL proof
+// UPDATED IMAGE DESIGN
 function generateContractImage(callback) {
     const c = document.createElement("canvas");
     const ctx = c.getContext("2d");
@@ -82,42 +108,72 @@ function generateContractImage(callback) {
     ctx.fillRect(0,0,c.width,c.height);
 
     ctx.fillStyle = "#000";
+
+    ctx.font = "bold 22px Arial";
+    ctx.fillText("F16 Logistics LLC", 50, 50);
+
     ctx.font = "16px Arial";
+    ctx.fillText("Vehicle Transport Agreement", 50, 80);
 
-    let y = 40;
-    function line(text){ ctx.fillText(text, 50, y); y += 30; }
+    let y = 120;
 
-    line("F16 Logistics LLC - Vehicle Transport Agreement");
-    line("----------------------------------------------");
+    function title(t){
+        ctx.font = "bold 15px Arial";
+        ctx.fillText(t, 50, y);
+        y += 25;
+    }
 
-    line("Vehicle: " + document.getElementById("vehicle").innerText);
-    line("Condition: " + document.getElementById("condition").innerText);
-    line("Pickup: " + document.getElementById("pickup").innerText);
-    line("Pickup ZIP: " + document.getElementById("pzip").innerText);
-    line("Delivery: " + document.getElementById("delivery").innerText);
-    line("Delivery ZIP: " + document.getElementById("dzip").innerText);
-    line("Date: " + document.getElementById("date").innerText);
-    line("Price: $" + document.getElementById("price").innerText);
+    function line(l,v){
+        ctx.font = "14px Arial";
+        ctx.fillText(l + ": " + v, 60, y);
+        y += 25;
+    }
 
-    y += 20;
-    line("Customer authorized payment & agreed to terms.");
-    line("Legally binding under U.S. E-SIGN Act.");
+    title("Customer Details");
+    line("Name", document.getElementById("name").value);
+    line("Email", document.getElementById("email").value);
+    line("Phone", document.getElementById("phone").value);
 
-    y += 20;
-    line("Timestamp: " + new Date().toString());
-    line("IP Address: " + userIP);
-    line("Device: " + navigator.userAgent);
+    y+=10;
+
+    title("Vehicle Details");
+    line("Vehicle", document.getElementById("vehicle").innerText);
+    line("Condition", document.getElementById("condition").innerText);
+
+    y+=10;
+
+    title("Pickup & Delivery");
+    line("Pickup", document.getElementById("pickup").innerText);
+    line("Delivery", document.getElementById("delivery").innerText);
+
+    y+=10;
+
+    title("Pricing");
+    line("Date", document.getElementById("date").innerText);
+    line("Price", "$"+document.getElementById("price").innerText);
+
+    y+=20;
+
+    title("Verification");
+    line("Timestamp", new Date().toString());
+    line("IP", userIP);
+
+    y+=40;
+
+    ctx.font = "bold 15px Arial";
+    ctx.fillText("Customer Signature:", 50, y);
+
+    y+=20;
 
     const sigImg = new Image();
     sigImg.src = document.getElementById("signature-input").value;
 
     sigImg.onload = () => {
-        ctx.drawImage(sigImg, 50, y, 400, 150);
+        ctx.drawImage(sigImg, 50, y, 350, 120);
         callback(c.toDataURL("image/png"));
     };
 }
 
-// Submit
 async function handleSubmit(e){
     e.preventDefault();
 
@@ -129,25 +185,25 @@ async function handleSubmit(e){
         return obj;
     },{});
 
+    data.name = document.getElementById("name").value;
+    data.email = document.getElementById("email").value;
+    data.phone = document.getElementById("phone").value;
+
     data.signature = signature;
     data.ip = userIP;
     data.timestamp = new Date().toISOString();
     data.userAgent = navigator.userAgent;
 
-    try {
-        generateContractImage(async (img) => {
-            data.contractImage = img;
+    generateContractImage(async (img) => {
+        data.contractImage = img;
 
-            await fetch(SHEET_URL, {
-                method:"POST",
-                body: JSON.stringify(data)
-            });
-
-            document.getElementById("bookingForm").submit();
+        await fetch(SHEET_URL, {
+            method:"POST",
+            body: JSON.stringify(data)
         });
-    } catch(err){
-        alert("Error sending data.");
-    }
+
+        document.getElementById("bookingForm").submit();
+    });
 }
 
 window.onload = function(){
@@ -161,62 +217,57 @@ window.onload = function(){
 <body>
 
 <h1>Vehicle Transport Agreement</h1>
-<div class="subtitle">F16 Logistics LLC | Licensed & Bonded Auto Transport Coordination</div>
+<div class="subtitle">F16 Logistics LLC</div>
 
 <div class="section">
+
 <div class="row">
-<div style="flex:2;"><div class="label">Vehicle</div><div id="vehicle"></div></div>
-<div style="flex:1;"><div class="label">Condition</div><div id="condition"></div></div>
+<div style="flex:1;" class="box">
+<div class="label">Name</div>
+<input type="text" id="name" required>
+</div>
+
+<div style="flex:1;" class="box">
+<div class="label">Email</div>
+<input type="email" id="email" required>
+</div>
+
+<div style="flex:1;" class="box">
+<div class="label">Phone</div>
+<input type="text" id="phone" required>
+</div>
 </div>
 
 <hr>
+
 <div class="row">
-<div style="flex:2;"><div class="label">Pickup Address</div><div id="pickup"></div></div>
-<div style="flex:1;"><div class="label">Pickup ZIP Code</div><div id="pzip"></div></div>
+<div style="flex:2;" class="box"><div class="label">Vehicle</div><div id="vehicle"></div></div>
+<div style="flex:1;" class="box"><div class="label">Condition</div><div id="condition"></div></div>
 </div>
 
 <div class="row">
-<div style="flex:2;"><div class="label">Dropoff Address</div><div id="delivery"></div></div>
-<div style="flex:1;"><div class="label">Dropoff ZIP Code</div><div id="dzip"></div></div>
+<div style="flex:2;" class="box"><div class="label">Pickup</div><div id="pickup"></div></div>
+<div style="flex:1;" class="box"><div class="label">ZIP</div><div id="pzip"></div></div>
 </div>
 
-<hr>
 <div class="row">
-<div style="flex:2;"><div class="label">Estimated Pickup Date</div><div id="date"></div></div>
-<div style="flex:1;"><div class="label">Total Price</div><div>$<span id="price"></span></div></div>
-</div>
+<div style="flex:2;" class="box"><div class="label">Delivery</div><div id="delivery"></div></div>
+<div style="flex:1;" class="box"><div class="label">ZIP</div><div id="dzip"></div></div>
 </div>
 
-<h3>Terms & Agreement</h3>
-<p>
-By confirming your booking, you authorize F16 Logistics LLC to arrange transport services and charge the agreed amount.
-Once a carrier is assigned, the order is considered in progress and may not be eligible for cancellation or refund.
-This electronic signature is legally binding under the U.S. E-SIGN Act.
-Your IP address and timestamp are recorded for fraud prevention and verification.
-</p>
+<div class="row">
+<div style="flex:2;" class="box"><div class="label">Date</div><div id="date"></div></div>
+<div style="flex:1;" class="box"><div class="label">Price</div><div>$<span id="price"></span></div></div>
+</div>
+
+</div>
 
 <form id="bookingForm" action="https://formsubmit.co/ranveer.sood45@gmail.com" method="POST">
-<input type="hidden" name="_captcha" value="false">
-<input type="hidden" name="_subject" value="New Booking Confirmation - F16 Logistics">
-<input type="hidden" name="_next" value="https://f16logistics.github.io/F16-Logistics/">
-
-<input type="hidden" name="Vehicle" id="form_vehicle">
-<input type="hidden" name="Condition" id="form_condition">
-<input type="hidden" name="Pickup Location" id="form_pickup">
-<input type="hidden" name="Pickup ZIP" id="form_pzip">
-<input type="hidden" name="Delivery Location" id="form_delivery">
-<input type="hidden" name="Delivery ZIP" id="form_dzip">
-<input type="hidden" name="Pickup Date" id="form_date">
-<input type="hidden" name="Quoted Price" id="form_price">
-
-<div>
-<label><strong>Sign Here:</strong></label>
-<canvas id="signature-pad"></canvas>
-<button type="button" onclick="clearSignature()">Clear Signature</button>
 <input type="hidden" name="Signature" id="signature-input">
-</div>
 
-<p><input type="checkbox" required> I confirm the above information is accurate and agree to proceed.</p>
+<label><strong>Signature:</strong></label>
+<canvas id="signature-pad"></canvas>
+
 <button type="submit">Confirm Booking</button>
 </form>
 
